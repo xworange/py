@@ -7,7 +7,7 @@ from PIL import Image
 from http.cookiejar import *
 from urllib.request import *
 
-
+print("更新会吗？")
 def returnNewCookie():
     headers = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
