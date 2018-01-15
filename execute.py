@@ -21,9 +21,9 @@ def returnNewCookie():
     PostUrl = "http://117.27.135.9:8083/sospweb/login/loginAction!userLogin.do"
     handler = urllib.request.HTTPCookieProcessor(cookie)
     opener = urllib.request.build_opener(handler)
-    user=speak.reuserName()
-    username = user[0][0]
-    password = user[0][1]
+    rs=speak.reuserName()
+    username =rs.Fields.item(0).value
+    password = rs.Fields.item(1).value
     # 用户名和密码
     picture = opener.open(CaptchaUrl).read()
     # 用openr访问验证码地址,获取cookie
@@ -73,8 +73,8 @@ def returnCookie():
         cookie.load(ignore_discard=True, ignore_expires=True)
         handler = urllib.request.HTTPCookieProcessor(cookie)
         opener = urllib.request.build_opener(handler)
-        s=speak.reuserName()
-        jcjg=str(s[0][2])
+        rs=speak.reuserName()
+        jcjg=rs.Fields.item(2).value
         postData={
             'jcjgId':jcjg
         }
@@ -156,8 +156,8 @@ def pleaseData():   #向服务器请求数据
 '''
 
 def rePlatformSerialNnumber():#返回平台任务单号：
-    s=speak.reuserName()
-    jcjg=str(s[0][2])
+    rs=speak.reuserName()
+    jcjg=rs.Fields.item(2).value
     s=post('http://117.27.135.9:8083/sospweb/com/zr/porminrTask/porminrTaskAction!getProductionTaskId.do',{'jcjgId':jcjg})
     s=s.replace('true','\'true\'')
     di=eval(s)
@@ -188,8 +188,6 @@ def reAllAllHntMix():#返回所有的配合比信息 List形式返回
     s=post('http://117.27.135.9:8083/sospweb/com/zr/hntmix/hntmixAction!queryAllHntMix.do',{'curPage':'1'})
     if len(s)<100:
         return "失败，没有查询到任何配合比信息."
-    #print(s)
-    #s=s.replace('true','\'true\'')
     di=eval(s)
     totalPage=int(di['totalPage'])
     allMix=[]
@@ -210,9 +208,9 @@ def reAllAllHntMix():#返回所有的配合比信息 List形式返回
                +speak.addSemComma(row ['mixPid'])  +speak.addSemComma(row ['sand']) +speak.addSemComma(row ['stone'])+speak.addSemComma(row ['water'])\
                +speak.addSemComma(row ['zmixGrade'])  +speak.addSem(row ['inSpectInstituTionName'])\
                +")"
-            speak.cur.execute(st)
+            speak.execute(st)
         speak.cur.commit()
     return allMix
 
-print(rePlatformSerialNnumber())
+print(reAllAllHntMix())
 
