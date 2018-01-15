@@ -214,5 +214,5 @@ def reAllAllHntMix():#返回所有的配合比信息 List形式返回
         speak.cur.commit()
     return allMix
 
-#print(rePlatformSerialNnumber())
+print(rePlatformSerialNnumber())
 
