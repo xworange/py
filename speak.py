@@ -4,15 +4,6 @@ import netcode
 import os
 import win32com.client
 
-'''
-def reCur():
-    accdb1 = os.path.dirname(__file__)+"/db1.mdb"
-    print (accdb1)
-    conn = pypyodbc.connect(u'Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=' + accdb1)
-    print('数据库连接成功')
-    return conn.cursor()
-cur=reCur()
-'''
 conn = win32com.client.Dispatch(r'ADODB.Connection')
 conn.Open('PROVIDER=Microsoft.Jet.OLEDB.4.0;DATA SOURCE='+os.path.dirname(__file__)+"/db1.mdb")
 
@@ -52,16 +43,15 @@ def addSemComma(s):#添加分号和逗号
 
 
 
-def pushHntCompactToDb(allCompact):
+def pushHntCompactToDb(allCompact):  #混凝土供应信息 写入数据库
     for row in allCompact:
         #print(row)
         st="INSERT INTO 混凝土供应信息 (buildUnit,compactAddress,conCreteCompactId,conCreteCompactPid,conCreteProjectCode,conCreteProjectName,hntpermissionIds,inSpectInstituTionName,qualityName,signingDataStr) VALUES (" + addSemComma( row ['buildUnit'])   +addSemComma(row['compactAddress'])+addSemComma(row['conCreteCompactId'])+addSemComma(row['conCreteCompactPid'])+addSemComma(row['conCreteProjectCode'])+addSemComma(row['conCreteProjectName'])+addSemComma(row['hntpermissionIds'])+addSemComma(row['inSpectInstituTionName'])+addSemComma(row['qualityName'])+addSem(row['signingDataStr'])+")"
         print(st)
-        cur.execute(st)
-        #print("INSERT INTO 混凝土供应信息 VALUES (" +addSem(row['buildUnit'])  +addSem(row['compactAddress'])+addSem(row['conCreteCompactId'])+addSem(row['conCreteCompactPid'])+addSem(row['conCreteProjectCode'])+addSem(row['conCreteProjectName'])+addSem(row['hntpermissionIds'])+addSem(row['inSpectInstituTionName'])+addSem(row['qualityName'])+addSem(row['signingDataStr']) +")")
-    cur.commit()
+        executeSQL(st)
 
-#rst=executeSQL('Select * from 混凝土供应信息')
-#print(rst[2])
-rs=reuserName()
-print(rs.fields.item(2).value)
+
+
+#rs=reuserName()
+#print(rs.fields.item(2).value)
+#print(rs.fields.count)

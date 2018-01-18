@@ -2,7 +2,7 @@
 #python 3  这个模块用于跟网站沟通
 import datetime,time,os
 
-import urllib,speak
+import urllib,speak,netcode
 from PIL import Image
 from http.cookiejar import *
 from urllib.request import *
@@ -119,7 +119,7 @@ def post(PostUrl, data):
     return response.read().decode('utf-8')
 
 
-
+'''
 def returnStartTime():
     #返回起始时间，用于向服务器请求数据
     if datetime.datetime.now().hour>8:
@@ -128,7 +128,7 @@ def returnStartTime():
         t= datetime.datetime.now() + datetime.timedelta(days=-1)
         s=str(t.year)+'-'+str(t.month)+'-'+str(t.day)
         return s
-'''
+
 def pleaseData():   #向服务器请求数据
     txtlist=[]
     curPage=1
@@ -184,7 +184,7 @@ def reAllHntCompact():#返回所有的合同编号 List形式返回
     return allCompact
 
 #
-def reAllAllHntMix():#返回所有的配合比信息 List形式返回
+def saveAllAllHntMix():#返回所有的配合比信息 List形式返回
     s=post('http://117.27.135.9:8083/sospweb/com/zr/hntmix/hntmixAction!queryAllHntMix.do',{'curPage':'1'})
     if len(s)<100:
         return "失败，没有查询到任何配合比信息."
@@ -208,9 +208,40 @@ def reAllAllHntMix():#返回所有的配合比信息 List形式返回
                +speak.addSemComma(row ['mixPid'])  +speak.addSemComma(row ['sand']) +speak.addSemComma(row ['stone'])+speak.addSemComma(row ['water'])\
                +speak.addSemComma(row ['zmixGrade'])  +speak.addSem(row ['inSpectInstituTionName'])\
                +")"
-            speak.execute(st)
-        speak.cur.commit()
-    return allMix
+            speak.executeSQL(st)
 
-print(reAllAllHntMix())
+
+def reAllSand():#返回第一页的砂子编号 List形式返回
+    rs=speak.reuserName()
+    jcjgid=rs.fields.item(2).value
+    postData={'reportType':'E05',
+              'jcjgId':jcjgid,
+              'startSourceDate':netcode.reNday(15),  #'2018-1-15'
+              'endSourceDate':netcode.reToday(),
+              'curPage':1
+    }
+    s=post('http://117.27.135.9:8083/sospweb/com/zr/report/reportAction!queryCementReport.do',postData)
+    if len(s)<100:
+        return "失败，没有查询到任何砂子编号."
+    s=s.replace('null','\'null\'')
+    print(s)
+    di=eval(s)
+    di= di['dataList']
+    return di
+'''
+    totalPage=int(di['totalPage'])
+    allCompact=[]
+    for i in range(1,2):#totalPage+1):
+        print('合同编号信息读取第几页：'+str(i))
+        s=post('http://117.27.135.9:8083/sospweb/com/zr/report/reportAction!queryCementReport.do',{'curPage':str(i)})
+        di=eval(s)
+        di=di['dataList']
+        #print(di)
+        for row in di:
+            allCompact.append(row)
+    return allCompact
+'''
+di=reAllSand()
+for row in di:
+    print(row)
 
