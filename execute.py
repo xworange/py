@@ -93,11 +93,25 @@ def returnCookie():
     else:
 
         return returnNewCookie()
+def unitToDB():  #把单位名称填入数据库
+    rs=speak.reuserName()
+    if rs.fields.item(3).value==None:
+        ss=post("http://117.27.135.9:8083/sospweb/com/zr/frame/toppanel.jsp",{})
+        istart=ss.find("登录单位：")
+        iend=ss.find("|",istart)
+        print(ss[istart:iend])
+        istart=istart+5
+        st=ss[istart:iend]
+        st=st.strip()
+        userName=rs.fields.item(0).value
+        speak.executeSQL("UPDATE 用户 SET unit=\'"+ st + "\' WHERE userName=\'"+userName+"\'")
+
 
 def returnOpener():
     cookie = returnCookie()
     handler = urllib.request.HTTPCookieProcessor(cookie)
     opener = build_opener(handler)
+    unitToDB()  #把单位名称填入数据库
     return opener
 
 opener=returnOpener()
@@ -162,7 +176,7 @@ def rePlatformSerialNnumber():#返回平台任务单号：
     s=s.replace('true','\'true\'')
     di=eval(s)
     return di['message']
-#print(rePlatformSerialNnumber())
+
 
 def reAllHntCompact():#返回所有的合同编号 List形式返回
     s=post('http://117.27.135.9:8083/sospweb/com/zr/hntcompact/hntcompactAction!queryAllHntCompact.do',{'curPage':'1'})
@@ -184,7 +198,7 @@ def reAllHntCompact():#返回所有的合同编号 List形式返回
     return allCompact
 
 #
-def saveAllAllHntMix():#返回所有的配合比信息 List形式返回
+def saveAllAllHntMix():#数据量大，查到配合比直接进数据库
     s=post('http://117.27.135.9:8083/sospweb/com/zr/hntmix/hntmixAction!queryAllHntMix.do',{'curPage':'1'})
     if len(s)<100:
         return "失败，没有查询到任何配合比信息."
@@ -200,17 +214,18 @@ def saveAllAllHntMix():#返回所有的配合比信息 List形式返回
         for row in di: #变量太大，所以直接进入数据库。
             #print(row)
             #allMix.append(row)
+
             st="INSERT INTO 设计配合比信息 (additive1,additive2,additive3,additive4,\
-              admixtrue1,admixtrue2,admixtrue3,cement,isBig,isInsert,mixGrade,mixId,mixPid,sand,stone,water,zmixGrade,inSpectInstituTionName) VALUES ("\
+              admixtrue1,admixtrue2,admixtrue3,cement,isBig,impervious,mixGrade,mixId,mixPid,sand,stone,water,zmixGrade,inSpectInstituTionName) VALUES ("\
                +speak.addSemComma(row ['additive1'])  +speak.addSemComma(row ['additive2']) +speak.addSemComma(row ['additive3'])+speak.addSemComma(row ['additive4'])\
                +speak.addSemComma(row ['admixtrue1'])  +speak.addSemComma(row ['admixtrue2']) +speak.addSemComma(row ['admixtrue3'])+speak.addSemComma(row ['cement'])\
-               +speak.addSemComma(row ['isBig'])  +speak.addSemComma(row ['isInsert']) +speak.addSemComma(row ['mixGrade'])+speak.addSemComma(row ['mixId'])\
+               +speak.addSemComma(row ['isBig'])  +speak.addSemComma(row ['impervious']) +speak.addSemComma(row ['mixGrade'])+speak.addSemComma(row ['mixId'])\
                +speak.addSemComma(row ['mixPid'])  +speak.addSemComma(row ['sand']) +speak.addSemComma(row ['stone'])+speak.addSemComma(row ['water'])\
                +speak.addSemComma(row ['zmixGrade'])  +speak.addSem(row ['inSpectInstituTionName'])\
                +")"
             speak.executeSQL(st)
 
-
+'''
 def reAllSand():#返回第一页的砂子编号 List形式返回
     rs=speak.reuserName()
     jcjgid=rs.fields.item(2).value
@@ -228,7 +243,7 @@ def reAllSand():#返回第一页的砂子编号 List形式返回
     di=eval(s)
     di= di['dataList']
     return di
-'''
+
     totalPage=int(di['totalPage'])
     allCompact=[]
     for i in range(1,2):#totalPage+1):
@@ -240,8 +255,151 @@ def reAllSand():#返回第一页的砂子编号 List形式返回
         for row in di:
             allCompact.append(row)
     return allCompact
+
+
+def reMaterial(reportType):#返回第一页的原材料编号 List形式返回
+    rs=speak.reuserName()
+    jcjgid=rs.fields.item(2).value
+    postData={'reportType':reportType,
+              'jcjgId':jcjgid,
+              'startSourceDate':netcode.reNday(15),  #'2018-1-15'
+              'endSourceDate':netcode.reToday(),
+              'curPage':1
+    }
+    print(postData)
+    s=post('http://117.27.135.9:8083/sospweb/com/zr/report/reportAction!queryCementReport.do',postData)
+    if len(s)<100:
+        return "失败，没有查询到任何原材料编号."
+    s=s.replace('null','\'null\'')
+    print(s)
+    di=eval(s)
+    di= di['dataList']
+    return di
 '''
-di=reAllSand()
-for row in di:
-    print(row)
+def reMaterialAlways(reportType):#返回第一页的原材料编号 List形式返回 一直找，找到为止。1年为限
+    rs=speak.reuserName()
+    jcjgid=rs.fields.item(2).value
+    allCompact=[]
+    for i in range(25):
+        j=i*15
+        k=j+15-1
+        postData={'reportType':reportType,
+                  'jcjgId':jcjgid,
+                  'startSourceDate':netcode.reNday(k),  #'2018-1-15'
+                  'endSourceDate':netcode.reNday(j),
+                  'curPage':1
+        }
+        print(postData)
+        s=post('http://117.27.135.9:8083/sospweb/com/zr/report/reportAction!queryCementReport.do',postData)
+        if len(s)<100:
+            return "失败，没有查询到任何原材料编号."
+        else:
+            s=s.replace('null','\'null\'')
+            #print(s)
+            di=eval(s)
+            #di= di['dataList']
+
+            totalPage=int(di['totalPage'])
+
+            for i in range(1,totalPage+1):
+                print('合同编号信息读取第几页：'+str(i))
+                postData['curPage']=str(i)
+                s=post('http://117.27.135.9:8083/sospweb/com/zr/report/reportAction!queryCementReport.do',postData)
+                #print(s)
+                s=s.replace('null','\'null\'')
+                di=eval(s)
+                di=di['dataList']
+                print(di)
+                for row in di:
+                    allCompact.append(row)
+                    #print('长度'+str(len(allCompact)))
+
+        if len(allCompact)>20:
+            break
+    return allCompact
+
+
+def pullList(sTemp):  #提交订单！
+    #sTemp=netcode.readfile("c:/vb.txt")
+    lis=sTemp.split('\n')
+
+    rsUser=speak.reuserName()
+    jcjg=rsUser.Fields.item(2).value
+    inSpectInstituTionName=rsUser.Fields.item(3).value
+
+    rsProject=speak.executeSQL("select * from 混凝土供应信息 where  主键 like "+speak.addSem(lis[2]))
+    rsMixture=speak.executeSQL("select * from 设计配合比信息 where  主键 like "+speak.addSem(lis[3]))
+    gkjrwd1=lis[1]
+    gkjrwd1=gkjrwd1[len(gkjrwd1)-9:]
+
+    if rsMixture.fields.item(10).value==0:
+        impervious='否'
+    else:
+        impervious='是'
+
+    if rsMixture.fields.item(9).value==0:
+        isBig='否'
+    else:
+        isBig='是'
+
+    print(rsProject.fields.item(1).value)
+    print(rsMixture.fields.item(1).value)
+    print(gkjrwd1)
+
+    postData = {
+    'jcjgId':jcjg,
+    'mixPidFlag': "Y",
+    'cementFlag': "Y" ,
+    'sandFlag':  "Y",
+    'stoneFlag':  "Y",
+    'additveFlag':  "Y",
+    'mixedFlag':  "Y",
+    'inSpectInstituTionName': inSpectInstituTionName ,
+    'buildUnit':  rsProject.fields.item(1).value,
+    'productionTaskId':  lis[1],
+    'serializableNum':  rsMixture.fields.item(11).value+"-"+lis[1],
+    'gkjrwd1':  gkjrwd1,
+    'gkjrwd2':  gkjrwd1,
+    'conCreteCompactId':  rsProject.fields.item(3).value,
+    'concreteCompactPid': rsProject.fields.item(4).value,
+    'conCreteProjectName': rsProject.fields.item(6).value,
+    'replacementSite':  lis[4],
+    'produceAmount':  lis[5],
+    'mixId':  rsMixture.fields.item(12).value,
+    'mixPid':rsMixture.fields.item(13).value ,
+    'mixGrade':rsMixture.fields.item(11).value,
+    'impervious':  impervious,
+    'isBig': isBig,
+    'zmixGrade': rsMixture.fields.item(17).value,
+    'waterWeight': rsMixture.fields.item(16).value,
+    'cementWeight': rsMixture.fields.item(8).value,
+    'sandWeight': rsMixture.fields.item(14).value,
+    'stoneWeight': rsMixture.fields.item(15).value,
+    'additve1Weight':  rsMixture.fields.item(1).value,
+    'additve2Weight':  rsMixture.fields.item(2).value,
+    'additve3Weight':  rsMixture.fields.item(3).value,
+    'additve4Weight': rsMixture.fields.item(4).value,
+    'admixture1Weight':  rsMixture.fields.item(5).value,
+    'admixture2Weight':  rsMixture.fields.item(6).value,
+    'admixture3Weight':  rsMixture.fields.item(7).value,
+    'sandReportId':  speak.reReportId(lis[6]),
+    'sand2ReportId':  speak.reReportId(lis[11]),
+    'sand3ReportId': speak.reReportId(lis[16]),
+    'stoneReportId': speak.reReportId(lis[7]),
+    'stone2ReportId': speak.reReportId(lis[12]),
+    'stone3ReportId':  speak.reReportId(lis[17]),
+    'cementReportId':  speak.reReportId(lis[8]),
+    'mixedReportId': speak.reReportId(lis[13]),
+    'slagReportId':speak.reReportId(lis[18]),
+    'ashReportId':speak.reReportId(lis[9]),
+    'additveOneReportId':speak.reReportId(lis[14]),
+    'additveTwoReportId':speak.reReportId(lis[19]),
+    'additve3ReportId':speak.reReportId(lis[10]),
+    'additve4ReportId':speak.reReportId(lis[15]),
+    }
+    print(postData)
+    spost=post("http://117.27.135.9:8083/sospweb/com/zr/porminrTask/porminrTaskAction!savePorminrTask.do",postData)
+    print(spost)
+    return spost
+
 
